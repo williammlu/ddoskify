@@ -49,9 +49,7 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 import java.io.IOException;
 
 /**
- * Activity for Googly Eyes, an app that uses the camera to track faces and superimpose Googly Eyes
- * animated graphics over the eyes.  The app also detects whether the eyes are open or closed,
- * drawing the eyes in the correct state.<p>
+ * Superimposes a graphic on top of a face. For this, we will have Ddoski's face!
  *
  * This app supports both a front facing mode and a rear facing mode, which demonstrate different
  * API functionality trade-offs:<p>
@@ -287,39 +285,31 @@ public final class GooglyEyesActivity extends AppCompatActivity {
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
                 .setTrackingEnabled(true)
                 .setMode(FaceDetector.FAST_MODE)
-                .setProminentFaceOnly(mIsFrontFacing)
-                .setMinFaceSize(mIsFrontFacing ? 0.35f : 0.15f)
+                .setProminentFaceOnly(false)
+                .setMinFaceSize( 0.15f)
                 .build();
 
         Detector.Processor<Face> processor;
-        if (mIsFrontFacing) {
-            // For front facing mode, a single tracker instance is used with an associated focusing
-            // processor.  This configuration allows the face detector to take some shortcuts to
-            // speed up detection, in that it can quit after finding a single face and can assume
-            // that the nextIrisPosition face position is usually relatively close to the last seen
-            // face position.
-            Tracker<Face> tracker = new GooglyFaceTracker(mGraphicOverlay, getApplicationContext());
-            processor = new LargestFaceFocusingProcessor.Builder(detector, tracker).build();
-        } else {
-            // For rear facing mode, a factory is used to create per-face tracker instances.  A
-            // tracker is created for each face and is maintained as long as the same face is
-            // visible, enabling per-face state to be maintained over time.  This is used to store
-            // the iris position and velocity for each face independently, simulating the motion of
-            // the eyes of any number of faces over time.
-            //
-            // Both the front facing mode and the rear facing mode use the same tracker
-            // implementation, avoiding the need for any additional code.  The only difference
-            // between these cases is the choice of Processor: one that is specialized for tracking
-            // a single face or one that can handle multiple faces.  Here, we use MultiProcessor,
-            // which is a standard component of the mobile vision API for managing multiple items.
-            MultiProcessor.Factory<Face> factory = new MultiProcessor.Factory<Face>() {
-                @Override
-                public Tracker<Face> create(Face face) {
-                    return new GooglyFaceTracker(mGraphicOverlay, getBaseContext());
-                }
-            };
-            processor = new MultiProcessor.Builder<>(factory).build();
-        }
+        // For rear facing mode, a factory is used to create per-face tracker instances.  A
+        // tracker is created for each face and is maintained as long as the same face is
+        // visible, enabling per-face state to be maintained over time.  This is used to store
+        // the iris position and velocity for each face independently, simulating the motion of
+        // the eyes of any number of faces over time.
+        //
+        // Both the front facing mode and the rear facing mode use the same tracker
+        // implementation, avoiding the need for any additional code.  The only difference
+        // between these cases is the choice of Processor: one that is specialized for tracking
+        // a single face or one that can handle multiple faces.  Here, we use MultiProcessor,
+        // which is a standard component of the mobile vision API for managing multiple items.
+
+        // Always use multiple face detection
+        MultiProcessor.Factory<Face> factory = new MultiProcessor.Factory<Face>() {
+            @Override
+            public Tracker<Face> create(Face face) {
+                return new FaceTracker(mGraphicOverlay, getBaseContext());
+            }
+        };
+        processor = new MultiProcessor.Builder<>(factory).build();
 
         detector.setProcessor(processor);
 
@@ -374,8 +364,8 @@ public final class GooglyEyesActivity extends AppCompatActivity {
         // want to increase the resolution.
         mCameraSource = new CameraSource.Builder(context, detector)
                 .setFacing(facing)
-                .setRequestedPreviewSize(320, 240)
-                .setRequestedFps(60.0f)
+                .setRequestedPreviewSize(640, 480)
+                .setRequestedFps(30.0f)
                 .setAutoFocusEnabled(true)
                 .build();
     }
