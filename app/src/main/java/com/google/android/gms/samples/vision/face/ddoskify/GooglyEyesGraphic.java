@@ -32,6 +32,8 @@ class GooglyEyesGraphic extends GraphicOverlay.Graphic {
     private static final float EYE_RADIUS_PROPORTION = 0.9f;
     private static final float IRIS_RADIUS_PROPORTION = EYE_RADIUS_PROPORTION / 2.0f;
 
+    private static Bitmap catIcon;
+
     private Paint mEyeWhitesPaint;
     private Paint mEyeIrisPaint;
     private Paint mEyeOutlinePaint;
@@ -74,6 +76,9 @@ class GooglyEyesGraphic extends GraphicOverlay.Graphic {
         mEyeOutlinePaint.setColor(Color.BLACK);
         mEyeOutlinePaint.setStyle(Paint.Style.STROKE);
         mEyeOutlinePaint.setStrokeWidth(5);
+
+        catIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.catface);
+
     }
 
     /**
@@ -113,22 +118,23 @@ class GooglyEyesGraphic extends GraphicOverlay.Graphic {
         PointF rightPosition =
                 new PointF(translateX(detectRightPosition.x), translateY(detectRightPosition.y));
 
-        // Use the inter-eye distance to set the size of the eyes.
-        float distance = (float) Math.sqrt(
-                Math.pow(rightPosition.x - leftPosition.x, 2) +
-                Math.pow(rightPosition.y - leftPosition.y, 2));
-        float eyeRadius = EYE_RADIUS_PROPORTION * distance;
-        float irisRadius = IRIS_RADIUS_PROPORTION * distance;
-
-        // Advance the current left iris position, and draw left eye.
-        PointF leftIrisPosition =
-                mLeftPhysics.nextIrisPosition(leftPosition, eyeRadius, irisRadius);
-        drawEye(canvas, leftPosition, eyeRadius, leftIrisPosition, irisRadius, mLeftOpen);
-
-        // Advance the current right iris position, and draw right eye.
-        PointF rightIrisPosition =
-                mRightPhysics.nextIrisPosition(rightPosition, eyeRadius, irisRadius);
-        drawEye(canvas, rightPosition, eyeRadius, rightIrisPosition, irisRadius, mRightOpen);
+        drawFace(canvas, leftPosition, rightPosition);
+//        // Use the inter-eye distance to set the size of the eyes.
+//        float distance = (float) Math.sqrt(
+//                Math.pow(rightPosition.x - leftPosition.x, 2) +
+//                Math.pow(rightPosition.y - leftPosition.y, 2));
+//        float eyeRadius = EYE_RADIUS_PROPORTION * distance;
+//        float irisRadius = IRIS_RADIUS_PROPORTION * distance;
+//
+//        // Advance the current left iris position, and draw left eye.
+//        PointF leftIrisPosition =
+//                mLeftPhysics.nextIrisPosition(leftPosition, eyeRadius, irisRadius);
+//        drawEye(canvas, leftPosition, eyeRadius, leftIrisPosition, irisRadius, mLeftOpen);
+//
+//        // Advance the current right iris position, and draw right eye.
+//        PointF rightIrisPosition =
+//                mRightPhysics.nextIrisPosition(rightPosition, eyeRadius, irisRadius);
+//        drawEye(canvas, rightPosition, eyeRadius, rightIrisPosition, irisRadius, mRightOpen);
     }
 
     /**
@@ -149,5 +155,23 @@ class GooglyEyesGraphic extends GraphicOverlay.Graphic {
             canvas.drawLine(start, y, end, y, mEyeOutlinePaint);
         }
         canvas.drawCircle(eyePosition.x, eyePosition.y, eyeRadius, mEyeOutlinePaint);
+    }
+
+    /**
+     * Draw a simple figure onto person's face. Use center of person's face as center for image.
+     * @param canvas
+     * @param leftEye
+     * @param rightEye
+     */
+    private void drawFace(Canvas canvas, PointF leftEye, PointF rightEye) {
+        float distX = Math.abs(leftEye.x - rightEye.x);
+        float distY = Math.abs(leftEye.y - rightEye.y);
+
+
+        double eyeWidth = Math.sqrt(distX * distX + distY * distY);
+        float faceCenterX  = (leftEye.x + rightEye.x)/2;
+        float faceCenterY = (leftEye.y + rightEye.y)/2;
+
+        canvas.drawBitmap(catIcon, faceCenterX, faceCenterY, mEyeWhitesPaint);
     }
 }
