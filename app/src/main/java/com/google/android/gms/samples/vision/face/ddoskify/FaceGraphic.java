@@ -129,13 +129,13 @@ class FaceGraphic extends GraphicOverlay.Graphic {
 
 
         // to give icon constant scaling factor
-        float geoMeanScaling = (float) (Math.sqrt((faceWidth * faceHeight)/(mDdoskiIcon.getWidth() * mDdoskiIcon.getHeight())));
+        float geoMeanScaling = (float) (1.2f * Math.sqrt((faceWidth * faceHeight)/(mDdoskiIcon.getWidth() * mDdoskiIcon.getHeight())));
 
-        mMatrix.reset(); // mutate mMatrix = speed optimization
-        mMatrix.postTranslate(-mDdoskiIcon.getWidth()/2, -mDdoskiIcon.getHeight()/2); // move center of image to top left corner
+            mMatrix.reset(); // mutate mMatrix = speed optimization
+            mMatrix.postTranslate(-mDdoskiIcon.getWidth()/2, -mDdoskiIcon.getHeight()/2); // move center of image to top left corner
 
-        mMatrix.postRotate(-angleDegree);
-        if (mIsFrontFacing) {
+            mMatrix.postRotate(-angleDegree);
+            if (mIsFrontFacing) {
             mMatrix.postRotate(180);
         }
         mMatrix.postScale(geoMeanScaling, geoMeanScaling);

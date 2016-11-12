@@ -24,8 +24,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.media.Image;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -46,9 +47,13 @@ import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.samples.vision.face.ddoskify.ui.camera.CameraSourcePreview;
 import com.google.android.gms.samples.vision.face.ddoskify.ui.camera.GraphicOverlay;
-import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Superimposes a graphic on top of a face. For this, we will have Ddoski's face!
@@ -74,10 +79,14 @@ public final class CameraOverlayActivity extends AppCompatActivity {
 
     // permission request codes need to be < 256
     private static final int RC_HANDLE_CAMERA_PERM = 2;
+    private static final int RC_HANDLE_STORAGE_PERM = 3;
+
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;
     private GraphicOverlay mGraphicOverlay;
+
+    private Button mTakePictureButton;
 
     private boolean mIsFrontFacing = true;
 
@@ -90,6 +99,9 @@ public final class CameraOverlayActivity extends AppCompatActivity {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
@@ -102,6 +114,44 @@ public final class CameraOverlayActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             mIsFrontFacing = savedInstanceState.getBoolean("IsFrontFacing");
         }
+
+        Button mTakePictureButton = (Button) findViewById(R.id.takePictureButton);
+        mTakePictureButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.e("CameraOverlay", "Button has been pressed");
+                mCameraSource.takePicture(new CameraSource.ShutterCallback() {
+                    @Override
+                    public void onShutter() {
+                        Snackbar.make(findViewById(android.R.id.content), "Picture Taken!", Snackbar.LENGTH_SHORT)
+                                .setActionTextColor(Color.BLACK)
+                                .show();
+                    }
+                }, new CameraSource.PictureCallback() {
+                    public void onPictureTaken(byte[] data) {
+                        int re = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+                        if (!isStorageAllowed()) {
+                            requestStoragePermission();
+                        }
+
+                        File pictureFile = getOutputMediaFile();
+                        if (pictureFile == null) {
+                            return;
+                        }
+                        try {
+                            FileOutputStream fos = new FileOutputStream(pictureFile);
+                            fos.write(data);
+                            fos.close();
+                        } catch (FileNotFoundException e) {
+                            Log.e("CameraOverlay", e.toString());
+                        } catch (IOException e) {
+                            Log.e("CameraOverlay", e.toString());
+                        }
+                    }
+                });
+            }
+        });
+
 
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
@@ -395,6 +445,70 @@ public final class CameraOverlayActivity extends AppCompatActivity {
                 mCameraSource.release();
                 mCameraSource = null;
             }
+        }
+    }
+
+
+
+    private static File getOutputMediaFile() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                "ddoskify");
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                Log.e("Ddoski", "failed to create directory " + mediaStorageDir.toString());
+                return null;
+            }
+        }
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
+                .format(new Date());
+        File mediaFile;
+        mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                + "IMG_" + timeStamp + ".jpg");
+
+        return mediaFile;
+    }
+
+
+    private boolean isStorageAllowed() {
+        //Getting the permission status
+        int result = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    //Requesting permission
+    private void requestStoragePermission(){
+
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+            //If the user has denied the permission previously your code will come to this block
+            //Here you can explain why you need this permission
+            //Explain here why you need this permission
+        }
+
+        final String[] permissions = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+        if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_CAMERA_PERM);
+
+
+            final Activity thisActivity = this;
+
+            View.OnClickListener listener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ActivityCompat.requestPermissions(thisActivity, permissions,
+                            RC_HANDLE_STORAGE_PERM);
+                }
+            };
+
+            Snackbar.make(mGraphicOverlay, R.string.permission_camera_rationale,
+                    Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.ok, listener)
+                    .show();
+
+            return;
         }
     }
 }
