@@ -41,6 +41,7 @@ class FaceTracker extends Tracker<Face> {
 
     private GraphicOverlay mOverlay;
     private FaceGraphic mFaceGraphic;
+    private boolean mIsFrontFacing;
 
     // Record the previously seen proportions of the landmark locations relative to the bounding box
     // of the face.  These proportions can be used to approximate where the landmarks are within the
@@ -54,9 +55,10 @@ class FaceTracker extends Tracker<Face> {
     // Methods
     //==============================================================================================
 
-    FaceTracker(GraphicOverlay overlay, Context c) {
+    FaceTracker(GraphicOverlay overlay, Context c, boolean isFrontFacing) {
         mOverlay = overlay;
         context = c;
+        mIsFrontFacing = isFrontFacing;
     }
 
     /**
@@ -64,7 +66,7 @@ class FaceTracker extends Tracker<Face> {
      */
     @Override
     public void onNewItem(int id, Face face) {
-        mFaceGraphic = new FaceGraphic(mOverlay, context);
+        mFaceGraphic = new FaceGraphic(mOverlay, context, mIsFrontFacing);
     }
 
     /**

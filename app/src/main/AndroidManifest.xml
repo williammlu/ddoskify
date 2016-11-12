@@ -13,7 +13,7 @@
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/icon"
-        android:theme="@style/Theme.AppCompat"
+        android:theme="@style/ddoski"
         android:label="Googly Eyes">
 
         <meta-data android:name="com.google.android.gms.version"
@@ -24,10 +24,10 @@
             android:value="face" />
 
         <activity
-            android:name="com.google.android.gms.samples.vision.face.ddoskify.GooglyEyesActivity"
+            android:name="com.google.android.gms.samples.vision.face.ddoskify.CameraOverlayActivity"
             android:icon="@drawable/icon"
             android:label="Googly Eyes"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/ddoski"
             android:screenOrientation="fullSensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

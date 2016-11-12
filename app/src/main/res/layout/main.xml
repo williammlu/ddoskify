@@ -2,6 +2,7 @@
 
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/topLayout"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -20,12 +21,16 @@
 
   </com.google.android.gms.samples.vision.face.ddoskify.ui.camera.CameraSourcePreview>
 
-  <Button
+  <ImageButton
       android:id="@+id/flipButton"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_alignParentLeft="true"
-      android:layout_alignParentBottom="true"
-      android:text="flip"/>
+      android:src="@drawable/ic_camera_switch_white_36dp"
+      android:layout_alignParentTop="true"
+      android:layout_alignParentRight="true"
+      android:layout_alignParentEnd="true"
+      android:layout_margin="15dp"
+      android:backgroundTint="@android:color/transparent"
+      android:hapticFeedbackEnabled="true" />
 
 </RelativeLayout>

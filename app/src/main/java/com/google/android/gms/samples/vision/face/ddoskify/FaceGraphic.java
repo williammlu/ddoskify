@@ -19,6 +19,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
@@ -33,9 +34,11 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     private static final float EYE_RADIUS_PROPORTION = 0.9f;
     private static final float EYE_WIDTH_TO_FACE_WIDTH_RATIO = 0.4f;
     private static final float FACE_WIDTH_TO_HEIGHT_RATIO = 1/1.61f; // golden ratio!
+    private static final float PI = 3.14159f;
 
-    private static Bitmap mCatIcon;
+    private static Bitmap mDdoskiIcon;
     private Matrix mMatrix;
+    private boolean mIsFrontFacing;
     private volatile PointF mLeftPosition;
     private volatile PointF mRightPosition;
 
@@ -46,12 +49,13 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     // Methods
     //==============================================================================================
 
-    FaceGraphic(GraphicOverlay overlay, Context c) {
+    FaceGraphic(GraphicOverlay overlay, Context c, boolean isFrontFacing) {
         super(overlay);
         context = c;
 
-        mCatIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.catface);
+        mDdoskiIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ddoski);
         mMatrix = new Matrix();
+        mIsFrontFacing = isFrontFacing;
     }
 
     /**
@@ -111,30 +115,37 @@ class FaceGraphic extends GraphicOverlay.Graphic {
 
         float angle = (float) Math.atan2(distY, -distX);
         float angleDegree = (float) Math.toDegrees(angle);
-        float perpAngle = angle - 3.14f/2;
+        float perpAngle = angle - PI/2;
 
-        Log.e("Eyes", "x:" + leftEye.x + "\ty: " + leftEye.y + "\tangle: " + angle * (180/3.14) + "\t perp: " + perpAngle * 180 /3.14 );
+//        Log.e("Eyes", "x:" + leftEye.x + "\ty: " + leftEye.y + "\tangle: " + angle * (180/3.14) + "\t perp: " + perpAngle * 180 /3.14 );
 
 
         // Using faceHeight/8 is by trial and error
         // Supposed to be faceHeight/6 assuming perfect facial proportions
-        float faceCenterX = eyeCenterX - (float) Math.cos(perpAngle) * faceHeight/8;
-        float faceCenterY = eyeCenterY + (float) Math.sin(perpAngle) * faceHeight/8;
+
+        // ddoski appears better at eye centered level.
+        float faceCenterX = eyeCenterX; //- (float) Math.cos(perpAngle) * 0*faceHeight/8;
+        float faceCenterY = eyeCenterY; // + (float) Math.sin(perpAngle) * 0*faceHeight/8;
 
 
         // to give icon constant scaling factor
-        float geoMeanScaling = (float) Math.sqrt((faceWidth * faceHeight)/(mCatIcon.getWidth() * mCatIcon.getHeight()));
+        float geoMeanScaling = (float) (Math.sqrt((faceWidth * faceHeight)/(mDdoskiIcon.getWidth() * mDdoskiIcon.getHeight())));
 
         mMatrix.reset(); // mutate mMatrix = speed optimization
-        mMatrix.postTranslate(-mCatIcon.getWidth()/2, -mCatIcon.getHeight()/2); // move center of image to top left corner
-        mMatrix.postRotate(-angleDegree + 180);
+        mMatrix.postTranslate(-mDdoskiIcon.getWidth()/2, -mDdoskiIcon.getHeight()/2); // move center of image to top left corner
+
+        mMatrix.postRotate(-angleDegree);
+        if (mIsFrontFacing) {
+            mMatrix.postRotate(180);
+        }
         mMatrix.postScale(geoMeanScaling, geoMeanScaling);
         mMatrix.postTranslate(faceCenterX, faceCenterY);
 
-        canvas.drawBitmap(mCatIcon, mMatrix, new Paint());
+        canvas.drawBitmap(mDdoskiIcon, mMatrix, new Paint());
 
-        /*
+
         // Testing below!
+        /*
         Paint green = new Paint();
         green.setColor(Color.GREEN);
         green.setStyle(Paint.Style.STROKE);
