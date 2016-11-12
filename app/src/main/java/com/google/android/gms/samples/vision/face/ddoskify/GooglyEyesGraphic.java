@@ -20,8 +20,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.util.Log;
 
 import com.google.android.gms.samples.vision.face.ddoskify.ui.camera.GraphicOverlay;
 
@@ -31,9 +33,13 @@ import com.google.android.gms.samples.vision.face.ddoskify.ui.camera.GraphicOver
 class GooglyEyesGraphic extends GraphicOverlay.Graphic {
     private static final float EYE_RADIUS_PROPORTION = 0.9f;
     private static final float IRIS_RADIUS_PROPORTION = EYE_RADIUS_PROPORTION / 2.0f;
-
+    private static final float EYE_WIDTH_TO_FACE_WIDTH_RATIO = 0.4f;
+    private static final float FACE_WIDTH_TO_HEIGHT_RATIO = 1/1.61f; // golden ratio!
+    private static final float EYE_HEIGHT_TO_FACE_HEIGHT_RATIO = 1/3.0f; // (eye to center of head)/(face height)
     private static Bitmap catIcon;
 
+
+    private Matrix matrix;
     private Paint mEyeWhitesPaint;
     private Paint mEyeIrisPaint;
     private Paint mEyeOutlinePaint;
@@ -78,7 +84,7 @@ class GooglyEyesGraphic extends GraphicOverlay.Graphic {
         mEyeOutlinePaint.setStrokeWidth(5);
 
         catIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.catface);
-
+        matrix = new Matrix();
     }
 
     /**
@@ -164,14 +170,60 @@ class GooglyEyesGraphic extends GraphicOverlay.Graphic {
      * @param rightEye
      */
     private void drawFace(Canvas canvas, PointF leftEye, PointF rightEye) {
-        float distX = Math.abs(leftEye.x - rightEye.x);
-        float distY = Math.abs(leftEye.y - rightEye.y);
+        float distX = rightEye.x - leftEye.x;
+        float distY = rightEye.y - leftEye.y;
+
+        float eyeWidth = (float) Math.sqrt(distX * distX + distY * distY);
+        float faceWidth = eyeWidth/EYE_WIDTH_TO_FACE_WIDTH_RATIO;
+        float faceHeight = faceWidth/FACE_WIDTH_TO_HEIGHT_RATIO;
+
+        float eyeCenterX  = (leftEye.x + rightEye.x)/2;
+        float eyeCenterY = (leftEye.y + rightEye.y)/2;
 
 
-        double eyeWidth = Math.sqrt(distX * distX + distY * distY);
-        float faceCenterX  = (leftEye.x + rightEye.x)/2;
-        float faceCenterY = (leftEye.y + rightEye.y)/2;
+        float angle = (float) Math.atan2(distY, -distX);
+        float angleDegree = angle  * 180 / 3.14f;
+        float perpAngle = angle - 3.14f/2;
 
-        canvas.drawBitmap(catIcon, faceCenterX, faceCenterY, mEyeWhitesPaint);
+        Log.e("Eyes", "x:" + leftEye.x + "\ty: " + leftEye.y + "\tangle: " + angle * (180/3.14) + "\t perp: " + perpAngle * 180 /3.14 );
+
+        float faceCenterX = eyeCenterX - (float) Math.cos(perpAngle) * faceHeight/8;
+        float faceCenterY = eyeCenterY + (float) Math.sin(perpAngle) * faceHeight/8;
+
+
+        float px = canvas.getWidth()/2;
+        float py = canvas.getHeight()/2;
+
+        matrix.reset(); // speed optimiziation
+        matrix.postTranslate(-catIcon.getWidth()/2, -catIcon.getHeight()/2);
+        matrix.postRotate(-angleDegree + 180);
+//        matrix.setScale(faceWidth * 2, faceHeight*2);
+        matrix.postTranslate(faceCenterX, faceCenterY);
+
+
+
+        canvas.drawBitmap(catIcon, matrix, new Paint());
+
+//        canvas.drawBitmap(catIcon, faceCenterX - faceWidth/2, faceCenterY - faceHeight/2, mEyeWhitesPaint);
+
+        // Testing below!
+        Paint green = new Paint();
+        green.setColor(Color.GREEN);
+        green.setStyle(Paint.Style.STROKE);
+        green.setStrokeWidth(5);
+        canvas.drawCircle(faceCenterX, faceCenterY, faceWidth/2, green); // circle from face center
+        canvas.drawCircle(eyeCenterX, eyeCenterY, 5, green); // eye center
+
+
+
+        Paint red = new Paint();
+        red.setColor(Color.RED);
+        red.setStyle(Paint.Style.FILL);
+//        canvas.drawCircle(faceCenterX, faceCenterY, 5, red);
+
+        canvas.drawLine(leftEye.x, leftEye.y, rightEye.x, rightEye.y, green);
+        canvas.drawLine(eyeCenterX, eyeCenterY, faceCenterX, faceCenterY, red);
+
+
     }
 }
