@@ -187,21 +187,22 @@ class GooglyEyesGraphic extends GraphicOverlay.Graphic {
 
         Log.e("Eyes", "x:" + leftEye.x + "\ty: " + leftEye.y + "\tangle: " + angle * (180/3.14) + "\t perp: " + perpAngle * 180 /3.14 );
 
+
+        // Using faceHeight/8 is by trial and error
+        // Supposed to be faceHeight/6 assuming perfect facial proportions
         float faceCenterX = eyeCenterX - (float) Math.cos(perpAngle) * faceHeight/8;
         float faceCenterY = eyeCenterY + (float) Math.sin(perpAngle) * faceHeight/8;
 
 
-        float px = canvas.getWidth()/2;
-        float py = canvas.getHeight()/2;
+        // to give icon constant scaling factor
+        float geoMeanScaling = (float) Math.sqrt((faceWidth * faceHeight)/(catIcon.getWidth() * catIcon.getHeight()));
 
-        matrix.reset(); // speed optimiziation
-        matrix.postTranslate(-catIcon.getWidth()/2, -catIcon.getHeight()/2);
+        matrix.reset(); // mutate matrix = speed optimization
+        matrix.postTranslate(-catIcon.getWidth()/2, -catIcon.getHeight()/2); // move center of image to top left corner
         matrix.postRotate(-angleDegree + 180);
-//        matrix.setScale(faceWidth * 2, faceHeight*2);
+        matrix.postScale(geoMeanScaling, geoMeanScaling);
         matrix.postTranslate(faceCenterX, faceCenterY);
-
-
-
+        
         canvas.drawBitmap(catIcon, matrix, new Paint());
 
 //        canvas.drawBitmap(catIcon, faceCenterX - faceWidth/2, faceCenterY - faceHeight/2, mEyeWhitesPaint);
