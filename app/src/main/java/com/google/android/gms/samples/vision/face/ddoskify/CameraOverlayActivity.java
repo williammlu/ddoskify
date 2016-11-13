@@ -24,7 +24,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -53,6 +58,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -90,6 +96,8 @@ public final class CameraOverlayActivity extends AppCompatActivity {
 
     private boolean mIsFrontFacing = true;
 
+    private ArrayList<FaceTracker> mFaces;
+
     //==============================================================================================
     // Activity Methods
     //==============================================================================================
@@ -99,14 +107,12 @@ public final class CameraOverlayActivity extends AppCompatActivity {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-
-
-
-        super.onCreate(savedInstanceState);
+                super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
+        mFaces = new ArrayList<FaceTracker>();
 
         final ImageButton button = (ImageButton) findViewById(R.id.flipButton);
         button.setOnClickListener(mFlipButtonListener);
@@ -115,32 +121,52 @@ public final class CameraOverlayActivity extends AppCompatActivity {
             mIsFrontFacing = savedInstanceState.getBoolean("IsFrontFacing");
         }
 
-        Button mTakePictureButton = (Button) findViewById(R.id.takePictureButton);
+        mTakePictureButton = (Button) findViewById(R.id.takePictureButton);
         mTakePictureButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.e("CameraOverlay", "Button has been pressed");
                 mCameraSource.takePicture(new CameraSource.ShutterCallback() {
                     @Override
                     public void onShutter() {
+//                        mCameraSource.stop();
                         Snackbar.make(findViewById(android.R.id.content), "Picture Taken!", Snackbar.LENGTH_SHORT)
                                 .setActionTextColor(Color.BLACK)
                                 .show();
                     }
                 }, new CameraSource.PictureCallback() {
                     public void onPictureTaken(byte[] data) {
-                        int re = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                            int re = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
-                        if (!isStorageAllowed()) {
-                            requestStoragePermission();
-                        }
+                            if (!isStorageAllowed()) {
+                                requestStoragePermission();
+                            }
 
                         File pictureFile = getOutputMediaFile();
                         if (pictureFile == null) {
                             return;
                         }
                         try {
+
+                            Bitmap picture = BitmapFactory.decodeByteArray(data, 0, data.length);
+                            Bitmap resizedBitmap = Bitmap.createBitmap(mGraphicOverlay.getWidth(),mGraphicOverlay.getHeight(),picture.getConfig());
+                            Canvas canvas = new Canvas(resizedBitmap);
+
+                            Matrix matrix = new Matrix();
+
+                            matrix.setScale((float)resizedBitmap.getWidth()/(float)picture.getWidth(),(float)resizedBitmap.getHeight()/(float)picture.getHeight());
+
+                            if (mIsFrontFacing) {
+                                // mirror by inverting scale and translating
+                                matrix.preScale(-1, 1);
+                                matrix.postTranslate(canvas.getWidth(), 0);
+                            }
+                            Paint paint = new Paint();
+                            canvas.drawBitmap(picture,matrix,paint);
+
+                            mGraphicOverlay.draw(canvas); // make those accessible
+
                             FileOutputStream fos = new FileOutputStream(pictureFile);
-                            fos.write(data);
+                            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
                             fos.close();
                         } catch (FileNotFoundException e) {
                             Log.e("CameraOverlay", e.toString());
@@ -338,7 +364,7 @@ public final class CameraOverlayActivity extends AppCompatActivity {
                 .setTrackingEnabled(true)
                 .setMode(FaceDetector.FAST_MODE)
                 .setProminentFaceOnly(false)
-                .setMinFaceSize( 0.15f)
+                .setMinFaceSize( 0.10f)
                 .build();
 
         Detector.Processor<Face> processor;
@@ -358,7 +384,9 @@ public final class CameraOverlayActivity extends AppCompatActivity {
         MultiProcessor.Factory<Face> factory = new MultiProcessor.Factory<Face>() {
             @Override
             public Tracker<Face> create(Face face) {
-                return new FaceTracker(mGraphicOverlay, getBaseContext(), mIsFrontFacing);
+                FaceTracker f =  new FaceTracker(mGraphicOverlay, getBaseContext(), mIsFrontFacing);
+                mFaces.add(f);
+                return f;
             }
         };
         processor = new MultiProcessor.Builder<>(factory).build();
@@ -416,7 +444,7 @@ public final class CameraOverlayActivity extends AppCompatActivity {
         // want to increase the resolution.
         mCameraSource = new CameraSource.Builder(context, detector)
                 .setFacing(facing)
-                .setRequestedPreviewSize(640, 480)
+                .setRequestedPreviewSize(1000, 750)
                 .setRequestedFps(30.0f)
                 .setAutoFocusEnabled(true)
                 .build();

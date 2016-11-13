@@ -36,11 +36,14 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     private static final float FACE_WIDTH_TO_HEIGHT_RATIO = 1/1.61f; // golden ratio!
     private static final float PI = 3.14159f;
 
+
     private static Bitmap mDdoskiIcon;
     private Matrix mMatrix;
     private boolean mIsFrontFacing;
     private volatile PointF mLeftPosition;
     private volatile PointF mRightPosition;
+
+    private Canvas mCanvas;
 
 
     private Context context;
@@ -50,8 +53,8 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     //==============================================================================================
 
     FaceGraphic(GraphicOverlay overlay, Context c, boolean isFrontFacing) {
-        super(overlay);
-        context = c;
+            super(overlay);
+            context = c;
 
         mDdoskiIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ddoski);
         mMatrix = new Matrix();
@@ -131,17 +134,18 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         // to give icon constant scaling factor
         float geoMeanScaling = (float) (1.2f * Math.sqrt((faceWidth * faceHeight)/(mDdoskiIcon.getWidth() * mDdoskiIcon.getHeight())));
 
-            mMatrix.reset(); // mutate mMatrix = speed optimization
-            mMatrix.postTranslate(-mDdoskiIcon.getWidth()/2, -mDdoskiIcon.getHeight()/2); // move center of image to top left corner
+        mMatrix.reset(); // mutate mMatrix = speed optimization
+        mMatrix.postTranslate(-mDdoskiIcon.getWidth()/2, -mDdoskiIcon.getHeight()/2); // move center of image to top left corner
 
-            mMatrix.postRotate(-angleDegree);
-            if (mIsFrontFacing) {
+        mMatrix.postRotate(-angleDegree);
+        if (mIsFrontFacing) {
             mMatrix.postRotate(180);
         }
         mMatrix.postScale(geoMeanScaling, geoMeanScaling);
         mMatrix.postTranslate(faceCenterX, faceCenterY);
 
         canvas.drawBitmap(mDdoskiIcon, mMatrix, new Paint());
+//        Log.e("FaceGraphics", mMatrix.toShortString());
 
 
         // Testing below!
@@ -160,7 +164,21 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         canvas.drawLine(leftEye.x, leftEye.y, rightEye.x, rightEye.y, green);
         canvas.drawLine(eyeCenterX, eyeCenterY, faceCenterX, faceCenterY, red);
         */
-
+        mCanvas = canvas;
 
     }
+
+    public static Bitmap getDdoskiIcon() {
+            return mDdoskiIcon;
+    }
+
+
+    public Matrix getMatrix() {
+        return mMatrix;
+    }
+
+    public Canvas getCanvas() {
+        return mCanvas;
+    }
+
 }

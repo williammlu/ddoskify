@@ -40,6 +40,11 @@ import java.util.Map;
 class FaceTracker extends Tracker<Face> {
 
     private GraphicOverlay mOverlay;
+
+    public FaceGraphic getFaceGraphic() {
+        return mFaceGraphic;
+    }
+
     private FaceGraphic mFaceGraphic;
     private boolean mIsFrontFacing;
 

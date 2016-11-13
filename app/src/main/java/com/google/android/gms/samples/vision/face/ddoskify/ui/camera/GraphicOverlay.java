@@ -167,10 +167,10 @@ public class GraphicOverlay extends View {
 
     /**
      * Draws the overlay with its associated graphic objects.
-     */
+                */
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
+    super.onDraw(canvas);
 
         synchronized (mLock) {
             if ((mPreviewWidth != 0) && (mPreviewHeight != 0)) {
