@@ -5,4 +5,8 @@
     <string name="permission_storage_rationale">Access to the storage is needed for storing photos</string>
     <string name="no_camera_permission">This application cannot run because it does not have the camera permission.  The application will now exit.</string>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
+    <string name="app_name">Ddoskify</string>
+    <string name="facebook_app_id">1799940216890593</string>
+    <string name="title_activity_facebook_sharing">FacebookSharingActivity</string>
+    <string name="share_fb">Share on Facebook</string>
 </resources>

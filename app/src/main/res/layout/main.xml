@@ -10,12 +10,12 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true">
 
-  <com.google.android.gms.samples.vision.face.ddoskify.ui.camera.CameraSourcePreview
+  <com.ddoskify.ui.camera.CameraSourcePreview
       android:id="@+id/preview"
       android:layout_width="match_parent"
       android:layout_height="match_parent">
 
-  </com.google.android.gms.samples.vision.face.ddoskify.ui.camera.CameraSourcePreview>
+  </com.ddoskify.ui.camera.CameraSourcePreview>
 
   <ImageButton
       android:id="@+id/flipButton"
@@ -29,7 +29,7 @@
       android:backgroundTint="@android:color/transparent"
       android:hapticFeedbackEnabled="true" />
 
-  <com.google.android.gms.samples.vision.face.ddoskify.ui.camera.GraphicOverlay
+  <com.ddoskify.ui.camera.GraphicOverlay
       android:id="@+id/faceOverlay"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"

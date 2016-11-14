@@ -2,4 +2,8 @@
 <resources>
 
     <style name="ddoski" parent="Theme.AppCompat.Light.NoActionBar" />
+
+    <style name="ddoski.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="ddoski.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>
